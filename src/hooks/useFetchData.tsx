@@ -24,6 +24,7 @@ type GasStation = {
   };
 };
 
+// fetch gas station data from open data cologne
 export function useFetchData() {
   return useQuery({
     queryKey: ["gasStation"],
@@ -39,6 +40,7 @@ export function useFetchData() {
   });
 }
 
+// move attributes for address in seperate keys
 function prettifyDataSet(data: GasStationDataSet[]): GasStation[] {
   let newData: GasStation[] = [];
   const regex = /^([^\d]+)(\d+) \((\d+) ([^)]+)\)$/;

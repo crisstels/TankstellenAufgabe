@@ -1,5 +1,4 @@
 import {
-  Column,
   ColumnDef,
   ColumnFiltersState,
   createColumnHelper,
@@ -12,14 +11,11 @@ import {
 } from "@tanstack/react-table";
 import "./App.css";
 import { useFetchData } from "./hooks/useFetchData";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { ColumnFilter } from "./Components/ColumnFilter";
+import ErrorPage from "./Components/Error";
+import { NavLink } from "react-router-dom";
 
-/* declare module "@tanstack/react-table" {
-  //allows us to define custom properties for our columns
-  interface ColumnMeta<TData extends RowData, TValue> {
-    filterVariant?: "text" | "range" | "select";
-  }
-} */
 
 type GasStation = {
   street: string;
@@ -43,6 +39,8 @@ const fallbackData: GasStation[] = [
     },
   },
 ];
+
+// main app
 function App() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const columnHelper = createColumnHelper<GasStation>();
@@ -71,7 +69,16 @@ function App() {
       header: () => <span>Stadtteil</span>,
       enableColumnFilter: false,
     }),
+    columnHelper.accessor("geometry", {
+      id: "mapsLink",
+      cell: ({row}) => {return <NavLink to={`https://maps.google.com/?ll=${row.original.geometry.y.toString()},${row.original.geometry.x.toString()}`} className="text-blue-500" target="_blank">Öffne Karte</NavLink>},
+      header: () => <span>Link zu Google Maps</span>,
+      enableColumnFilter: false,
+      enableSorting: false,
+    })
   ], []);
+
+
   const { data, error, isLoading } = useFetchData();
 
   const table = useReactTable({
@@ -86,13 +93,13 @@ function App() {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  if (error) return <div>Request failed!</div>;
-  if (isLoading) return <div>...Loading</div>;
+  if (error) return <ErrorPage message={error.message}></ErrorPage>;
+  if (isLoading) return <div>Daten werden geladen...</div>;
 
   return (
     <div className="flex flex-col">
-      <h1 className="mx-auto font-bold text-xl py-3">Der Tankstellen Finder</h1>
-      <div className="relative overflow-x-auto mx-auto">
+      <h1 className="mx-auto font-bold text-xl py-3">Der Tankstellen Finder ⛽</h1>
+      <div className="relative overflow-x-auto mx-auto pt-3">
         <table className="w-32 text-sm text-center rtl:text-right">
           <thead className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -122,7 +129,7 @@ function App() {
                         </div>
                         {header.column.getCanFilter() ? (
                           <div>
-                            <Filter column={header.column} />
+                            <ColumnFilter column={header.column} />
                           </div>
                         ) : null}
                       </>)}
@@ -219,7 +226,7 @@ function App() {
             table.setPageSize(Number(e.target.value))
           }}
         >
-          {[10, 20, 30, 40, 50].map(pageSize => (
+          {[5, 10, 20, 30, 40, 50].map(pageSize => (
             <option key={pageSize} value={pageSize}>
               Show {pageSize}
             </option>
@@ -230,88 +237,6 @@ function App() {
       </div>
     </div>
   );
-}
-
-function Filter({ column }: { column: Column<any, unknown> }) {
-  const columnFilterValue = column.getFilterValue()
-  const { filterVariant } = column.columnDef.meta ?? {}
-
-  return filterVariant === 'range' ? (
-    <div>
-      <div className="flex space-x-2">
-        {/* See faceted column filters example for min max values functionality */}
-        <DebouncedInput
-          type="number"
-          value={(columnFilterValue as [number, number])?.[0] ?? ''}
-          onChange={value =>
-            column.setFilterValue((old: [number, number]) => [value, old?.[1]])
-          }
-          placeholder={`Min`}
-          className="w-24 border shadow rounded"
-        />
-        <DebouncedInput
-          type="number"
-          value={(columnFilterValue as [number, number])?.[1] ?? ''}
-          onChange={value =>
-            column.setFilterValue((old: [number, number]) => [old?.[0], value])
-          }
-          placeholder={`Max`}
-          className="w-24 border shadow rounded"
-        />
-      </div>
-      <div className="h-1" />
-    </div>
-  ) : filterVariant === 'select' ? (
-    <select
-      onChange={e => column.setFilterValue(e.target.value)}
-      value={columnFilterValue?.toString()}
-    >
-      {/* See faceted column filters example for dynamic select options */}
-      <option value="">All</option>
-      <option value="complicated">complicated</option>
-      <option value="relationship">relationship</option>
-      <option value="single">single</option>
-    </select>
-  ) : (
-    <DebouncedInput
-      className="w-36 border shadow rounded"
-      onChange={value => column.setFilterValue(value)}
-      placeholder={`Search...`}
-      type="text"
-      value={(columnFilterValue ?? '') as string}
-    />
-    // See faceted column filters example for datalist search suggestions
-  )
-}
-
-// A typical debounced input react component
-function DebouncedInput({
-  value: initialValue,
-  onChange,
-  debounce = 500,
-  ...props
-}: {
-  value: string | number
-  onChange: (value: string | number) => void
-  debounce?: number
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
-  const [value, setValue] = useState(initialValue)
-
-  useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
-
-    return () => clearTimeout(timeout)
-  }, [value])
-
-  return (
-    <input {...props} value={value} onChange={e => setValue(e.target.value)} />
-  )
 }
 
 export default App;
