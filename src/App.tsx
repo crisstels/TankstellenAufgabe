@@ -34,8 +34,8 @@ const fallbackData: GasStation[] = [
     zipCode: 53111,
     city: "Bonn",
     geometry: {
-      x: 6.960644911005172,
-      y: 50.916095041454554,
+      x: 7.1027216,
+      y: 50.7385753,
     },
   },
 ];
@@ -98,7 +98,7 @@ function App() {
 
   return (
     <div className="flex flex-col">
-      <h1 className="mx-auto font-bold text-xl py-3">Der Tankstellen Finder ⛽</h1>
+      <h1 className="mx-auto font-bold text-xl py-3">Der Kölner Tankstellen Finder ⛽</h1>
       <div className="relative overflow-x-auto mx-auto pt-3">
         <table className="w-32 text-sm text-center rtl:text-right">
           <thead className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
